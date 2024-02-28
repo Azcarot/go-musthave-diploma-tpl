@@ -7,8 +7,6 @@ import (
 	"github.com/Azcarot/GopherMarketProject/internal/storage"
 )
 
-var ctxKey = "UserLogin"
-
 func CheckAuthorization(h http.Handler) http.Handler {
 	login := func(res http.ResponseWriter, req *http.Request) {
 		token := req.Header.Get("Authorization")
@@ -28,7 +26,7 @@ func CheckAuthorization(h http.Handler) http.Handler {
 			res.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		req = req.WithContext(context.WithValue(req.Context(), ctxKey, userData.Login))
+		req = req.WithContext(context.WithValue(req.Context(), storage.UserLoginCtxKey, userData.Login))
 		h.ServeHTTP(res, req)
 	}
 	return http.HandlerFunc(login)

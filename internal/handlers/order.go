@@ -35,10 +35,7 @@ func Order(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	asString := string(data)
-	if err != nil {
-		res.WriteHeader(http.StatusBadRequest)
-		return
-	}
+
 	orderNumber, err := strconv.ParseUint(asString, 10, 64)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
