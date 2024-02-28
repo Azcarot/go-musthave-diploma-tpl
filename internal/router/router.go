@@ -38,7 +38,7 @@ func MakeRouter(flag utils.Flags) *chi.Mux {
 	r.Use(middleware.WithLogging)
 	r.Route("/api/user", func(r chi.Router) {
 		r.Post("/register", http.HandlerFunc(handlers.Registration))
-		r.With(middleware.CheckAuthorization).Post("/login", http.HandlerFunc(handlers.LoginUser))
+		r.Post("/login", http.HandlerFunc(handlers.LoginUser))
 		r.With(middleware.CheckAuthorization).Post("/orders", http.HandlerFunc(handlers.Order))
 		r.With(middleware.CheckAuthorization).Post("/balance/withdraw", http.HandlerFunc(handlers.Withdraw))
 		r.With(middleware.CheckAuthorization).Get("/orders", http.HandlerFunc(handlers.GetOrders))
