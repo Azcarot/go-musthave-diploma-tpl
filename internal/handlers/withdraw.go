@@ -18,7 +18,7 @@ func Withdraw(res http.ResponseWriter, req *http.Request) {
 	var ctxOrderKey, ctxUserKey storage.CtxKey
 	var ctx context.Context
 	ctx = context.Background()
-	dataLogin, ok := req.Context().Value("UserLogin").(string)
+	dataLogin, ok := req.Context().Value(storage.UserLoginCtxKey).(string)
 	if !ok {
 		res.WriteHeader(http.StatusInternalServerError)
 		return

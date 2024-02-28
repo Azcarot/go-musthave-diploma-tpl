@@ -9,7 +9,7 @@ import (
 
 func GetWithdrawals(res http.ResponseWriter, req *http.Request) {
 	var userData storage.UserData
-	data, ok := req.Context().Value("UserLogin").(string)
+	data, ok := req.Context().Value(storage.UserLoginCtxKey).(string)
 	if !ok {
 		res.WriteHeader(http.StatusInternalServerError)
 		return

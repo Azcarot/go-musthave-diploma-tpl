@@ -23,7 +23,7 @@ func Order(res http.ResponseWriter, req *http.Request) {
 	var ctx context.Context
 	var ctxOrderKey storage.CtxKey
 	ctx = context.Background()
-	dataLogin, ok := req.Context().Value("UserLogin").(string)
+	dataLogin, ok := req.Context().Value(storage.UserLoginCtxKey).(string)
 	if !ok {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
