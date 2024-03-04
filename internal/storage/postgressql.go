@@ -23,7 +23,6 @@ type MyCustomClaims struct {
 
 type CtxKey string
 
-var ST = MakeStore(DB)
 var mut sync.Mutex
 
 const UserLoginCtxKey CtxKey = "userLogin"
@@ -68,6 +67,7 @@ type SQLStore struct {
 }
 
 var DB *pgx.Conn
+var ST PgxStorage
 
 type pgxConnTime struct {
 	attempts          int
@@ -121,6 +121,7 @@ func connectToDB(f utils.Flags) error {
 	var err error
 	ps := fmt.Sprintf(f.FlagDBAddr)
 	DB, err = pgx.Connect(context.Background(), ps)
+	ST = MakeStore(DB)
 	return err
 }
 
@@ -139,12 +140,12 @@ func CheckDBConnection() http.Handler {
 	return http.HandlerFunc(checkConnection)
 }
 
-func (Store *SQLStore) CreateTablesForGopherStore() {
+func (store SQLStore) CreateTablesForGopherStore() {
 	ctx := context.Background()
 	mut.Lock()
 	defer mut.Unlock()
 	queryForFun := `DROP TABLE IF EXISTS users CASCADE`
-	Store.DB.Exec(ctx, queryForFun)
+	store.DB.Exec(ctx, queryForFun)
 	query := `CREATE TABLE IF NOT EXISTS users (
 		id SERIAL NOT NULL PRIMARY KEY, 
 		login text NOT NULL, 
@@ -153,7 +154,7 @@ func (Store *SQLStore) CreateTablesForGopherStore() {
 		withdrawal BIGINT NOT NULL,
 		created text )`
 
-	_, err := Store.DB.Exec(ctx, query)
+	_, err := store.DB.Exec(ctx, query)
 
 	if err != nil {
 
@@ -161,7 +162,7 @@ func (Store *SQLStore) CreateTablesForGopherStore() {
 
 	}
 	queryForFun = `DROP TABLE IF EXISTS orders CASCADE`
-	Store.DB.Exec(ctx, queryForFun)
+	store.DB.Exec(ctx, queryForFun)
 	query = `CREATE TABLE IF NOT EXISTS orders(
 		id SERIAL NOT NULL PRIMARY KEY,
 		order_number BIGINT,
@@ -171,7 +172,7 @@ func (Store *SQLStore) CreateTablesForGopherStore() {
 		customer TEXT NOT NULL,
 		created TEXT
 	)`
-	_, err = Store.DB.Exec(ctx, query)
+	_, err = store.DB.Exec(ctx, query)
 
 	if err != nil {
 

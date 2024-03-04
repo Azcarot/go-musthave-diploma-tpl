@@ -11,10 +11,7 @@ import (
 	"github.com/Azcarot/GopherMarketProject/internal/utils"
 )
 
-var ST storage.PgxStorage
-
 func main() {
-
 	flag := utils.ParseFlagsAndENV()
 	if flag.FlagDBAddr != "" {
 		err := storage.NewConn(flag)
