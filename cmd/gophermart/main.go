@@ -11,6 +11,8 @@ import (
 	"github.com/Azcarot/GopherMarketProject/internal/utils"
 )
 
+var ST storage.PgxStorage
+
 func main() {
 
 	flag := utils.ParseFlagsAndENV()
@@ -19,8 +21,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		storage.CheckDBConnection(storage.DB)
-		storage.CreateTablesForGopherStore(storage.DB)
+		storage.PgxStorage.CreateTablesForGopherStore(storage.ST)
 		defer storage.DB.Close(context.Background())
 		r := router.MakeRouter(flag)
 		server := &http.Server{

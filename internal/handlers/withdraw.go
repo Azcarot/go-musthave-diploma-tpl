@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Azcarot/GopherMarketProject/internal/storage"
@@ -51,6 +52,9 @@ func Withdraw(res http.ResponseWriter, req *http.Request) {
 	ctx = context.WithValue(ctx, ctxOrderKey, orderNumber)
 	ctx = context.WithValue(ctx, ctxUserKey, userData.Login)
 	var balanceData storage.BalanceResponce
+	mut := sync.Mutex{}
+	mut.Lock()
+	defer mut.Unlock()
 	balanceData, err = storage.GetUserBalance(storage.DB, userData, ctx)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)

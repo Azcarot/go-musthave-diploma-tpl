@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/Azcarot/GopherMarketProject/internal/utils"
@@ -22,8 +23,12 @@ type MyCustomClaims struct {
 
 type CtxKey string
 
+var ST = MakeStore(DB)
+var mut sync.Mutex
+
 const UserLoginCtxKey CtxKey = "userLogin"
 const OrderNumberCtxKey CtxKey = "orderNumber"
+const DBCtxKey CtxKey = "dbConn"
 
 type UserData struct {
 	Login         string
@@ -53,6 +58,15 @@ type BalanceResponce struct {
 	Withdrawn float64 `json:"withdrawn"`
 }
 
+type PgxStorage interface {
+	CreateTablesForGopherStore()
+	CreateNewUser(data UserData) error
+}
+
+type SQLStore struct {
+	DB *pgx.Conn
+}
+
 var DB *pgx.Conn
 
 type pgxConnTime struct {
@@ -69,6 +83,12 @@ type WithdrawResponse struct {
 	OrderNumber string  `json:"order"`
 	Amount      float64 `json:"sum"`
 	ProcessedAt string  `json:"processed_at"`
+}
+
+func MakeStore(db *pgx.Conn) PgxStorage {
+	return &SQLStore{
+		DB: db,
+	}
 }
 
 func NewConn(f utils.Flags) error {
@@ -104,7 +124,7 @@ func connectToDB(f utils.Flags) error {
 	return err
 }
 
-func CheckDBConnection(db *pgx.Conn) http.Handler {
+func CheckDBConnection() http.Handler {
 	checkConnection := func(res http.ResponseWriter, req *http.Request) {
 
 		err := DB.Ping(context.Background())
@@ -119,11 +139,12 @@ func CheckDBConnection(db *pgx.Conn) http.Handler {
 	return http.HandlerFunc(checkConnection)
 }
 
-func CreateTablesForGopherStore(db *pgx.Conn) {
+func (Store *SQLStore) CreateTablesForGopherStore() {
 	ctx := context.Background()
-
+	mut.Lock()
+	defer mut.Unlock()
 	queryForFun := `DROP TABLE IF EXISTS users CASCADE`
-	db.Exec(ctx, queryForFun)
+	Store.DB.Exec(ctx, queryForFun)
 	query := `CREATE TABLE IF NOT EXISTS users (
 		id SERIAL NOT NULL PRIMARY KEY, 
 		login text NOT NULL, 
@@ -132,7 +153,7 @@ func CreateTablesForGopherStore(db *pgx.Conn) {
 		withdrawal BIGINT NOT NULL,
 		created text )`
 
-	_, err := db.Exec(ctx, query)
+	_, err := Store.DB.Exec(ctx, query)
 
 	if err != nil {
 
@@ -140,7 +161,7 @@ func CreateTablesForGopherStore(db *pgx.Conn) {
 
 	}
 	queryForFun = `DROP TABLE IF EXISTS orders CASCADE`
-	db.Exec(ctx, queryForFun)
+	Store.DB.Exec(ctx, queryForFun)
 	query = `CREATE TABLE IF NOT EXISTS orders(
 		id SERIAL NOT NULL PRIMARY KEY,
 		order_number BIGINT,
@@ -150,7 +171,7 @@ func CreateTablesForGopherStore(db *pgx.Conn) {
 		customer TEXT NOT NULL,
 		created TEXT
 	)`
-	_, err = db.Exec(ctx, query)
+	_, err = Store.DB.Exec(ctx, query)
 
 	if err != nil {
 
@@ -159,10 +180,12 @@ func CreateTablesForGopherStore(db *pgx.Conn) {
 	}
 }
 
-func CreateNewUser(db *pgx.Conn, data UserData) error {
+func (store SQLStore) CreateNewUser(data UserData) error {
 	ctx := context.Background()
 	encodedPW := utils.ShaData(data.Password, SecretKey)
-	_, err := db.Exec(ctx, `INSERT into users (login, password, accrual_points, withdrawal, created) 
+	mut.Lock()
+	defer mut.Unlock()
+	_, err := store.DB.Exec(ctx, `INSERT into users (login, password, accrual_points, withdrawal, created) 
 	values ($1, $2, $3, $4, $5);`,
 		data.Login, encodedPW, 0, 0, data.Date)
 	return err

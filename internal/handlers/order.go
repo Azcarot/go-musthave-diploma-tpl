@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Azcarot/GopherMarketProject/internal/storage"
@@ -51,6 +52,9 @@ func Order(res http.ResponseWriter, req *http.Request) {
 	ctx = context.WithValue(ctx, ctxOrderKey, orderNumber)
 	order.OrderNumber = orderNumber
 	order.User = userData.Login
+	mut := sync.Mutex{}
+	mut.Lock()
+	defer mut.Unlock()
 	ok, anotherUser, err := storage.CheckIfOrderExists(storage.DB, order, ctx)
 	if errors.Is(err, errors.New("no order number in context")) {
 		res.WriteHeader(http.StatusInternalServerError)

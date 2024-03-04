@@ -48,7 +48,7 @@ func Registration(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusConflict)
 		return
 	}
-	err = storage.CreateNewUser(storage.DB, userData)
+	err = storage.PgxStorage.CreateNewUser(storage.ST, userData)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
