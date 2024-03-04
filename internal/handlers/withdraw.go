@@ -55,7 +55,7 @@ func Withdraw(res http.ResponseWriter, req *http.Request) {
 	mut := sync.Mutex{}
 	mut.Lock()
 	defer mut.Unlock()
-	balanceData, err = storage.GetUserBalance(storage.DB, userData, ctx)
+	balanceData, err = storage.PgxStorage.GetUserBalance(storage.ST, userData, ctx)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
@@ -68,7 +68,7 @@ func Withdraw(res http.ResponseWriter, req *http.Request) {
 	}
 	userData.AccrualPoints = intAccBalanceData
 	userData.Withdrawal = intWithdData
-	err = storage.WitdrawFromUser(storage.DB, userData, withdrawalData, ctx)
+	err = storage.PgxStorage.WitdrawFromUser(storage.ST, userData, withdrawalData, ctx)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
@@ -78,7 +78,7 @@ func Withdraw(res http.ResponseWriter, req *http.Request) {
 	orderData.Withdrawal = int(withdrawalData.Amount * 100)
 	orderData.Date = time.Now().Format(time.RFC3339)
 	orderData.User = userData.Login
-	err = storage.CreateNewOrder(storage.DB, orderData, ctx)
+	err = storage.PgxStorage.CreateNewOrder(storage.ST, orderData, ctx)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return

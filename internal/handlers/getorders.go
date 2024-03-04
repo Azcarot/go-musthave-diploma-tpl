@@ -23,7 +23,7 @@ func GetOrders(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	userData.Login = data
-	orders, err := storage.GetCustomerOrders(storage.DB, userData.Login)
+	orders, err := storage.PgxStorage.GetCustomerOrders(storage.ST, userData.Login)
 	if errors.Is(err, pgx.ErrNoRows) {
 		res.WriteHeader(http.StatusNoContent)
 		return
@@ -84,10 +84,10 @@ func CheckStatus(resp *http.Request) (*http.Response, error) {
 }
 
 func ActualiseOrders(flag utils.Flags, quit chan struct{}) {
-	orderNumbers, err := storage.GetUnfinishedOrders(storage.DB)
+	orderNumbers, err := storage.PgxStorage.GetUnfinishedOrders(storage.ST)
 	if err != nil {
 		time.Sleep(time.Duration(time.Duration(5).Seconds()))
-		orderNumbers, err = storage.GetUnfinishedOrders(storage.DB)
+		orderNumbers, err = storage.PgxStorage.GetUnfinishedOrders(storage.ST)
 		if err != nil {
 			return
 		}
@@ -112,12 +112,12 @@ func ActualiseOrders(flag utils.Flags, quit chan struct{}) {
 				}
 				orderData.OrderNumber = uint64(orderNumber)
 				orderData.State = orderReq.Status
-				err = storage.UpdateOrder(storage.DB, orderData)
+				err = storage.PgxStorage.UpdateOrder(storage.ST, orderData)
 				if err != nil {
 					return
 				}
 				if orderData.Accrual > 0 {
-					_, err := storage.AddBalanceToUser(storage.DB, orderData)
+					_, err := storage.PgxStorage.AddBalanceToUser(storage.ST, orderData)
 					if err != nil {
 						return
 					}

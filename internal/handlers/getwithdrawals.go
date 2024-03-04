@@ -15,7 +15,7 @@ func GetWithdrawals(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	userData.Login = data
-	withdrawals, err := storage.GetWithdrawals(storage.DB, userData)
+	withdrawals, err := storage.PgxStorage.GetWithdrawals(storage.ST, userData)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return

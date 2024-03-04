@@ -22,7 +22,7 @@ func GetBalance(res http.ResponseWriter, req *http.Request) {
 	ctxUserKey := storage.UserLoginCtxKey
 	ctx = context.WithValue(ctx, ctxUserKey, userData.Login)
 	var balanceData storage.BalanceResponce
-	balanceData, err := storage.GetUserBalance(storage.DB, userData, ctx)
+	balanceData, err := storage.PgxStorage.GetUserBalance(storage.ST, userData, ctx)
 	if err != nil {
 		fmt.Println(err)
 		res.WriteHeader(http.StatusInternalServerError)

@@ -10,11 +10,6 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-type RegisterRequest struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-}
-
 type Payload struct {
 	Login string
 	Exp   int64
@@ -22,7 +17,7 @@ type Payload struct {
 
 func Registration(res http.ResponseWriter, req *http.Request) {
 
-	regData := RegisterRequest{}
+	regData := storage.RegisterRequest{}
 
 	data, err := io.ReadAll(req.Body)
 
@@ -39,7 +34,7 @@ func Registration(res http.ResponseWriter, req *http.Request) {
 	userData.Login = regData.Login
 	userData.Password = regData.Password
 	userData.Date = time.Now().Format(time.RFC3339)
-	result, err := storage.CheckUserExists(storage.DB, userData)
+	result, err := storage.PgxStorage.CheckUserExists(storage.ST, userData)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return

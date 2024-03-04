@@ -39,7 +39,7 @@ func LoginUser(res http.ResponseWriter, req *http.Request) {
 	var userData storage.UserData
 	userData.Login = loginData.Login
 	userData.Password = loginData.Password
-	result, err := storage.CheckUserPassword(storage.DB, userData)
+	result, err := storage.PgxStorage.CheckUserPassword(storage.ST, userData)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return

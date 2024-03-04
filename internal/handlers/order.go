@@ -55,7 +55,7 @@ func Order(res http.ResponseWriter, req *http.Request) {
 	mut := sync.Mutex{}
 	mut.Lock()
 	defer mut.Unlock()
-	ok, anotherUser, err := storage.CheckIfOrderExists(storage.DB, order, ctx)
+	ok, anotherUser, err := storage.PgxStorage.CheckIfOrderExists(storage.ST, order, ctx)
 	if errors.Is(err, errors.New("no order number in context")) {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
@@ -69,7 +69,7 @@ func Order(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	order.Date = time.Now().Format(time.RFC3339)
-	err = storage.CreateNewOrder(storage.DB, order, ctx)
+	err = storage.PgxStorage.CreateNewOrder(storage.ST, order, ctx)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
