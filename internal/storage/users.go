@@ -69,21 +69,18 @@ func (store SQLStore) CheckUserExists(data UserData) (bool, error) {
 }
 
 func (store SQLStore) CheckUserPassword(ctx context.Context, data UserData) (bool, error) {
-	if userLogin, ok := ctx.Value(UserLoginCtxKey).(string); ok {
-		encodedPw := utils.ShaData(data.Password, SecretKey)
-		sqlQuery := fmt.Sprintf(`SELECT login, password FROM users WHERE login = '%s'`, userLogin)
-		var login, pw string
-		err := store.DB.QueryRow(ctx, sqlQuery).Scan(&login, &pw)
-		if err != nil {
-			return false, err
-		}
-
-		if encodedPw != pw {
-			return false, nil
-		}
-		return true, nil
+	encodedPw := utils.ShaData(data.Password, SecretKey)
+	sqlQuery := fmt.Sprintf(`SELECT login, password FROM users WHERE login = '%s'`, data.Login)
+	var login, pw string
+	err := store.DB.QueryRow(ctx, sqlQuery).Scan(&login, &pw)
+	if err != nil {
+		return false, err
 	}
-	return false, ErrNoLogin
+
+	if encodedPw != pw {
+		return false, nil
+	}
+	return true, nil
 }
 
 func VerifyToken(token string) (jwt.MapClaims, bool) {
