@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 )
 
@@ -45,7 +44,7 @@ func (store SQLStore) GetUserBalance(ctx context.Context, data UserData) (Balanc
 	for {
 		select {
 		case <-ctx.Done():
-			return result, fmt.Errorf("TimeOut")
+			return result, errTimeout
 		default:
 			sql = fmt.Sprintf(`SELECT accrual_points, withdrawal FROM users WHERE login = '%s'`, data.Login)
 
@@ -64,15 +63,15 @@ func (store SQLStore) WithdrawFromUser(ctx context.Context, withdraw WithdrawReq
 		for {
 			select {
 			case <-ctx.Done():
-				return fmt.Errorf("TimeOut")
+				return errTimeout
 			default:
 				var balance BalanceResponce
-				getBalanceSql := fmt.Sprintf(`SELECT accrual_points, withdrawal FROM users WHERE login = '%s'`, userLogin)
+				getBalanceSQL := fmt.Sprintf(`SELECT accrual_points, withdrawal FROM users WHERE login = '%s'`, userLogin)
 				tx, err := store.DB.Begin(ctx)
 				if err != nil {
 					return err
 				}
-				err = store.DB.QueryRow(ctx, getBalanceSql).Scan(&balance.Accrual, &balance.Withdrawn)
+				err = store.DB.QueryRow(ctx, getBalanceSQL).Scan(&balance.Accrual, &balance.Withdrawn)
 				if err != nil {
 					return err
 				}
@@ -98,29 +97,39 @@ func (store SQLStore) WithdrawFromUser(ctx context.Context, withdraw WithdrawReq
 
 		}
 	}
-	err := errors.New("no userLogin in context")
-	return err
+	return ErrNoLogin
 }
 
-func (store SQLStore) GetWithdrawals(userData UserData) ([]WithdrawResponse, error) {
+func (store SQLStore) GetWithdrawals(ctx context.Context) ([]WithdrawResponse, error) {
 	var result []WithdrawResponse
-	sqlQuery := fmt.Sprintf(`SELECT order_number, withdrawal, created FROM orders WHERE customer = '%s' and withdrawal > 0 ORDER BY id DESC`, userData.Login)
-	ctx := context.Background()
-	rows, err := store.DB.Query(ctx, sqlQuery)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var order WithdrawResponse
-		if err := rows.Scan(&order.OrderNumber, &order.Amount, &order.ProcessedAt); err != nil {
-			return result, err
+	if userLogin, ok := ctx.Value(UserLoginCtxKey).(string); ok {
+		for {
+			select {
+			case <-ctx.Done():
+				return result, errTimeout
+			default:
+				sqlQuery := fmt.Sprintf(`SELECT order_number, withdrawal, created FROM orders WHERE customer = '%s' and withdrawal > 0 ORDER BY id DESC`, userLogin)
+				rows, err := store.DB.Query(ctx, sqlQuery)
+				if err != nil {
+					return nil, err
+				}
+				defer rows.Close()
+				for rows.Next() {
+					var order WithdrawResponse
+					if err := rows.Scan(&order.OrderNumber, &order.Amount, &order.ProcessedAt); err != nil {
+						return result, err
+					}
+					order.Amount = order.Amount / 100
+					result = append(result, order)
+				}
+				if err = rows.Err(); err != nil {
+					return result, err
+				}
+				return result, nil
+
+			}
 		}
-		order.Amount = order.Amount / 100
-		result = append(result, order)
+
 	}
-	if err = rows.Err(); err != nil {
-		return result, err
-	}
-	return result, nil
+	return result, ErrNoLogin
 }

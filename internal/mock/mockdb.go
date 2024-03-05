@@ -82,18 +82,18 @@ func (mr *MockPgxStorageMockRecorder) CheckUserExists(arg0 interface{}) *gomock.
 }
 
 // CheckUserPassword mocks base method.
-func (m *MockPgxStorage) CheckUserPassword(arg0 storage.UserData) (bool, error) {
+func (m *MockPgxStorage) CheckUserPassword(arg0 context.Context, arg1 storage.UserData) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckUserPassword", arg0)
+	ret := m.ctrl.Call(m, "CheckUserPassword", arg0, arg1)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CheckUserPassword indicates an expected call of CheckUserPassword.
-func (mr *MockPgxStorageMockRecorder) CheckUserPassword(arg0 interface{}) *gomock.Call {
+func (mr *MockPgxStorageMockRecorder) CheckUserPassword(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckUserPassword", reflect.TypeOf((*MockPgxStorage)(nil).CheckUserPassword), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckUserPassword", reflect.TypeOf((*MockPgxStorage)(nil).CheckUserPassword), arg0, arg1)
 }
 
 // CreateNewOrder mocks base method.
@@ -111,17 +111,17 @@ func (mr *MockPgxStorageMockRecorder) CreateNewOrder(arg0, arg1 interface{}) *go
 }
 
 // CreateNewUser mocks base method.
-func (m *MockPgxStorage) CreateNewUser(arg0 storage.UserData) error {
+func (m *MockPgxStorage) CreateNewUser(arg0 context.Context, arg1 storage.UserData) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateNewUser", arg0)
+	ret := m.ctrl.Call(m, "CreateNewUser", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateNewUser indicates an expected call of CreateNewUser.
-func (mr *MockPgxStorageMockRecorder) CreateNewUser(arg0 interface{}) *gomock.Call {
+func (mr *MockPgxStorageMockRecorder) CreateNewUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNewUser", reflect.TypeOf((*MockPgxStorage)(nil).CreateNewUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNewUser", reflect.TypeOf((*MockPgxStorage)(nil).CreateNewUser), arg0, arg1)
 }
 
 // CreateTablesForGopherStore mocks base method.
@@ -137,7 +137,7 @@ func (mr *MockPgxStorageMockRecorder) CreateTablesForGopherStore() *gomock.Call 
 }
 
 // GetCustomerOrders mocks base method.
-func (m *MockPgxStorage) GetCustomerOrders(arg0 string) ([]storage.OrderResponse, error) {
+func (m *MockPgxStorage) GetCustomerOrders(arg0 context.Context) ([]storage.OrderResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCustomerOrders", arg0)
 	ret0, _ := ret[0].([]storage.OrderResponse)
@@ -182,7 +182,7 @@ func (mr *MockPgxStorageMockRecorder) GetUserBalance(arg0, arg1 interface{}) *go
 }
 
 // GetWithdrawals mocks base method.
-func (m *MockPgxStorage) GetWithdrawals(arg0 storage.UserData) ([]storage.WithdrawResponse, error) {
+func (m *MockPgxStorage) GetWithdrawals(arg0 context.Context) ([]storage.WithdrawResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetWithdrawals", arg0)
 	ret0, _ := ret[0].([]storage.WithdrawResponse)
@@ -197,17 +197,17 @@ func (mr *MockPgxStorageMockRecorder) GetWithdrawals(arg0 interface{}) *gomock.C
 }
 
 // UpdateOrder mocks base method.
-func (m *MockPgxStorage) UpdateOrder(arg0 storage.OrderData) error {
+func (m *MockPgxStorage) UpdateOrder(arg0 context.Context, arg1 storage.OrderData) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateOrder", arg0)
+	ret := m.ctrl.Call(m, "UpdateOrder", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateOrder indicates an expected call of UpdateOrder.
-func (mr *MockPgxStorageMockRecorder) UpdateOrder(arg0 interface{}) *gomock.Call {
+func (mr *MockPgxStorageMockRecorder) UpdateOrder(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrder", reflect.TypeOf((*MockPgxStorage)(nil).UpdateOrder), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrder", reflect.TypeOf((*MockPgxStorage)(nil).UpdateOrder), arg0, arg1)
 }
 
 // WithdrawFromUser mocks base method.

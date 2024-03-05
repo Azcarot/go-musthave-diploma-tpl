@@ -59,16 +59,16 @@ type BalanceResponce struct {
 
 type PgxStorage interface {
 	CreateTablesForGopherStore()
-	CreateNewUser(data UserData) error
+	CreateNewUser(ctx context.Context, data UserData) error
 	CheckUserExists(data UserData) (bool, error)
-	CheckUserPassword(data UserData) (bool, error)
+	CheckUserPassword(ctx context.Context, data UserData) (bool, error)
 	CreateNewOrder(ctx context.Context, data OrderData) error
-	UpdateOrder(data OrderData) error
+	UpdateOrder(ctx context.Context, orderData OrderData) error
 	AddBalanceToUser(orderData OrderData) (bool, error)
 	WithdrawFromUser(ctx context.Context, withdraw WithdrawRequest) error
 	GetUserBalance(ctx context.Context, data UserData) (BalanceResponce, error)
-	GetWithdrawals(userData UserData) ([]WithdrawResponse, error)
-	GetCustomerOrders(login string) ([]OrderResponse, error)
+	GetWithdrawals(ctx context.Context) ([]WithdrawResponse, error)
+	GetCustomerOrders(ctx context.Context) ([]OrderResponse, error)
 	CheckIfOrderExists(ctx context.Context, data OrderData) (bool, bool, error)
 	GetUnfinishedOrders() ([]uint64, error)
 }
@@ -79,6 +79,8 @@ type SQLStore struct {
 
 var DB *pgx.Conn
 var ST PgxStorage
+var errTimeout = fmt.Errorf("timeout exceeded")
+var ErrNoLogin = fmt.Errorf("no login in context")
 
 type pgxConnTime struct {
 	attempts          int

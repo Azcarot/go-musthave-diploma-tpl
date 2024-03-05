@@ -56,7 +56,7 @@ func Order(res http.ResponseWriter, req *http.Request) {
 	mut.Lock()
 	defer mut.Unlock()
 	ok, anotherUser, err := storage.PgxStorage.CheckIfOrderExists(storage.ST, ctx, order)
-	if errors.Is(err, errors.New("no order number in context")) {
+	if errors.Is(err, storage.ErrNoLogin) {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}

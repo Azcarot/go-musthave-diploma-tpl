@@ -35,7 +35,7 @@ func TestRegistration(t *testing.T) {
 		storage.ST = mock
 		if !test.wrongRequest {
 			mock.EXPECT().CheckUserExists(gomock.Eq(test.userData)).Times(1)
-			mock.EXPECT().CreateNewUser(gomock.Eq(test.userData)).Times(1).Return(nil)
+			mock.EXPECT().CreateNewUser(gomock.Any(), gomock.Eq(test.userData)).Times(1).Return(nil)
 		}
 		handler := http.HandlerFunc(Registration)
 		recorder := httptest.NewRecorder()

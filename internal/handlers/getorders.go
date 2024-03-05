@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -17,13 +18,14 @@ import (
 
 func GetOrders(res http.ResponseWriter, req *http.Request) {
 	var userData storage.UserData
+	ctx := req.Context()
 	data, ok := req.Context().Value(storage.UserLoginCtxKey).(string)
 	if !ok {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	userData.Login = data
-	orders, err := storage.PgxStorage.GetCustomerOrders(storage.ST, userData.Login)
+	orders, err := storage.PgxStorage.GetCustomerOrders(storage.ST, ctx)
 	if errors.Is(err, pgx.ErrNoRows) {
 		res.WriteHeader(http.StatusNoContent)
 		return
@@ -85,6 +87,7 @@ func CheckStatus(resp *http.Request) (*http.Response, error) {
 
 func ActualiseOrders(flag utils.Flags) {
 	orderNumbers, err := storage.PgxStorage.GetUnfinishedOrders(storage.ST)
+	ctx := context.Background()
 	if err != nil {
 		time.Sleep(time.Duration(time.Duration(5).Seconds()))
 		orderNumbers, err = storage.PgxStorage.GetUnfinishedOrders(storage.ST)
@@ -112,7 +115,7 @@ func ActualiseOrders(flag utils.Flags) {
 				}
 				orderData.OrderNumber = uint64(orderNumber)
 				orderData.State = orderReq.Status
-				err = storage.PgxStorage.UpdateOrder(storage.ST, orderData)
+				err = storage.PgxStorage.UpdateOrder(storage.ST, ctx, orderData)
 				if err != nil {
 					return
 				}

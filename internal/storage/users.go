@@ -16,30 +16,37 @@ type RegisterRequest struct {
 	Password string `json:"password"`
 }
 
-func (store SQLStore) CreateNewUser(data UserData) error {
-	ctx := context.Background()
+func (store SQLStore) CreateNewUser(ctx context.Context, data UserData) error {
 	encodedPW := utils.ShaData(data.Password, SecretKey)
-	mut.Lock()
-	defer mut.Unlock()
-	tx, err := store.DB.Begin(ctx)
-	if err != nil {
-		return err
-	}
+	for {
+		select {
+		case <-ctx.Done():
+			return errTimeout
+		default:
+			mut.Lock()
+			defer mut.Unlock()
+			tx, err := store.DB.Begin(ctx)
+			if err != nil {
+				return err
+			}
 
-	_, err = store.DB.Exec(ctx, `INSERT into users (login, password, accrual_points, withdrawal, created) 
+			_, err = store.DB.Exec(ctx, `INSERT into users (login, password, accrual_points, withdrawal, created) 
 	values ($1, $2, $3, $4, $5);`,
-		data.Login, encodedPW, 0, 0, data.Date)
+				data.Login, encodedPW, 0, 0, data.Date)
 
-	if err != nil {
-		tx.Rollback(ctx)
-		return err
+			if err != nil {
+				tx.Rollback(ctx)
+				return err
+			}
+			err = tx.Commit(ctx)
+			if err != nil {
+				tx.Rollback(ctx)
+				return err
+			}
+			return err
+		}
 	}
-	err = tx.Commit(ctx)
-	if err != nil {
-		tx.Rollback(ctx)
-		return err
-	}
-	return err
+
 }
 
 func (store SQLStore) CheckUserExists(data UserData) (bool, error) {
@@ -61,20 +68,22 @@ func (store SQLStore) CheckUserExists(data UserData) (bool, error) {
 
 }
 
-func (store SQLStore) CheckUserPassword(data UserData) (bool, error) {
-	encodedPw := utils.ShaData(data.Password, SecretKey)
-	ctx := context.Background()
-	sqlQuery := fmt.Sprintf(`SELECT login, password FROM users WHERE login = '%s'`, data.Login)
-	var login, pw string
-	err := store.DB.QueryRow(ctx, sqlQuery).Scan(&login, &pw)
-	if err != nil {
-		return false, err
-	}
+func (store SQLStore) CheckUserPassword(ctx context.Context, data UserData) (bool, error) {
+	if userLogin, ok := ctx.Value(UserLoginCtxKey).(string); ok {
+		encodedPw := utils.ShaData(data.Password, SecretKey)
+		sqlQuery := fmt.Sprintf(`SELECT login, password FROM users WHERE login = '%s'`, userLogin)
+		var login, pw string
+		err := store.DB.QueryRow(ctx, sqlQuery).Scan(&login, &pw)
+		if err != nil {
+			return false, err
+		}
 
-	if encodedPw != pw {
-		return false, nil
+		if encodedPw != pw {
+			return false, nil
+		}
+		return true, nil
 	}
-	return true, nil
+	return false, ErrNoLogin
 }
 
 func VerifyToken(token string) (jwt.MapClaims, bool) {
