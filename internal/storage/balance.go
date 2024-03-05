@@ -39,44 +39,64 @@ func (store SQLStore) AddBalanceToUser(orderData OrderData) (bool, error) {
 	return true, nil
 }
 
-func (store SQLStore) GetUserBalance(data UserData, ctx context.Context) (BalanceResponce, error) {
+func (store SQLStore) GetUserBalance(ctx context.Context, data UserData) (BalanceResponce, error) {
 	var sql string
 	var result BalanceResponce
-	if userLogin, ok := ctx.Value(UserLoginCtxKey).(string); ok {
-		sql = fmt.Sprintf(`SELECT accrual_points, withdrawal FROM users WHERE login = '%s'`, userLogin)
+	for {
+		select {
+		case <-ctx.Done():
+			return result, fmt.Errorf("TimeOut")
+		default:
+			sql = fmt.Sprintf(`SELECT accrual_points, withdrawal FROM users WHERE login = '%s'`, data.Login)
 
-		err := store.DB.QueryRow(ctx, sql).Scan(&result.Accrual, &result.Withdrawn)
-		if err != nil {
-			return result, err
+			err := store.DB.QueryRow(ctx, sql).Scan(&result.Accrual, &result.Withdrawn)
+			if err != nil {
+				return result, err
+			}
+			return result, nil
 		}
-		return result, nil
 	}
-	err := errors.New("no login in context")
-	return result, err
+
 }
 
-func (store SQLStore) WitdrawFromUser(userData UserData, withdraw WithdrawRequest, ctx context.Context) error {
+func (store SQLStore) WithdrawFromUser(ctx context.Context, withdraw WithdrawRequest) error {
 	if userLogin, ok := ctx.Value(UserLoginCtxKey).(string); ok {
-		currentBalance := userData.AccrualPoints
+		for {
+			select {
+			case <-ctx.Done():
+				return fmt.Errorf("TimeOut")
+			default:
+				var balance BalanceResponce
+				getBalanceSql := fmt.Sprintf(`SELECT accrual_points, withdrawal FROM users WHERE login = '%s'`, userLogin)
+				tx, err := store.DB.Begin(ctx)
+				if err != nil {
+					return err
+				}
+				err = store.DB.QueryRow(ctx, getBalanceSql).Scan(&balance.Accrual, &balance.Withdrawn)
+				if err != nil {
+					return err
+				}
+				currentBalance := int(balance.Accrual)
+				if int(currentBalance) < int(withdraw.Amount*100) {
+					return fmt.Errorf("payment required")
+				}
+				currentBalance -= int(withdraw.Amount * 100)
+				currentWithdrawn := int(balance.Withdrawn) + int(withdraw.Amount*100)
+				sql := `UPDATE users SET accrual_points = $1, withdrawal = $2 WHERE login = $3`
+				_, err = store.DB.Exec(ctx, sql, currentBalance, currentWithdrawn, userLogin)
+				if err != nil {
+					tx.Rollback(ctx)
+					return err
+				}
+				err = tx.Commit(ctx)
+				if err != nil {
+					tx.Rollback(ctx)
+					return err
+				}
+				return nil
+			}
 
-		currentBalance -= int(withdraw.Amount * 100)
-		currentWithdrawn := userData.Withdrawal + int(withdraw.Amount*100)
-		sql := `UPDATE users SET accrual_points = $1, withdrawal = $2 WHERE login = $3`
-		tx, err := store.DB.Begin(ctx)
-		if err != nil {
-			return err
 		}
-		_, err = store.DB.Exec(ctx, sql, currentBalance, currentWithdrawn, userLogin)
-		if err != nil {
-			tx.Rollback(ctx)
-			return err
-		}
-		err = tx.Commit(ctx)
-		if err != nil {
-			tx.Rollback(ctx)
-			return err
-		}
-		return nil
 	}
 	err := errors.New("no userLogin in context")
 	return err

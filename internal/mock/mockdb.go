@@ -51,7 +51,7 @@ func (mr *MockPgxStorageMockRecorder) AddBalanceToUser(arg0 interface{}) *gomock
 }
 
 // CheckIfOrderExists mocks base method.
-func (m *MockPgxStorage) CheckIfOrderExists(arg0 storage.OrderData, arg1 context.Context) (bool, bool, error) {
+func (m *MockPgxStorage) CheckIfOrderExists(arg0 context.Context, arg1 storage.OrderData) (bool, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckIfOrderExists", arg0, arg1)
 	ret0, _ := ret[0].(bool)
@@ -97,7 +97,7 @@ func (mr *MockPgxStorageMockRecorder) CheckUserPassword(arg0 interface{}) *gomoc
 }
 
 // CreateNewOrder mocks base method.
-func (m *MockPgxStorage) CreateNewOrder(arg0 storage.OrderData, arg1 context.Context) error {
+func (m *MockPgxStorage) CreateNewOrder(arg0 context.Context, arg1 storage.OrderData) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateNewOrder", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -167,7 +167,7 @@ func (mr *MockPgxStorageMockRecorder) GetUnfinishedOrders() *gomock.Call {
 }
 
 // GetUserBalance mocks base method.
-func (m *MockPgxStorage) GetUserBalance(arg0 storage.UserData, arg1 context.Context) (storage.BalanceResponce, error) {
+func (m *MockPgxStorage) GetUserBalance(arg0 context.Context, arg1 storage.UserData) (storage.BalanceResponce, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserBalance", arg0, arg1)
 	ret0, _ := ret[0].(storage.BalanceResponce)
@@ -210,16 +210,16 @@ func (mr *MockPgxStorageMockRecorder) UpdateOrder(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrder", reflect.TypeOf((*MockPgxStorage)(nil).UpdateOrder), arg0)
 }
 
-// WitdrawFromUser mocks base method.
-func (m *MockPgxStorage) WitdrawFromUser(arg0 storage.UserData, arg1 storage.WithdrawRequest, arg2 context.Context) error {
+// WithdrawFromUser mocks base method.
+func (m *MockPgxStorage) WithdrawFromUser(arg0 context.Context, arg1 storage.WithdrawRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WitdrawFromUser", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "WithdrawFromUser", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// WitdrawFromUser indicates an expected call of WitdrawFromUser.
-func (mr *MockPgxStorageMockRecorder) WitdrawFromUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+// WithdrawFromUser indicates an expected call of WithdrawFromUser.
+func (mr *MockPgxStorageMockRecorder) WithdrawFromUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WitdrawFromUser", reflect.TypeOf((*MockPgxStorage)(nil).WitdrawFromUser), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithdrawFromUser", reflect.TypeOf((*MockPgxStorage)(nil).WithdrawFromUser), arg0, arg1)
 }

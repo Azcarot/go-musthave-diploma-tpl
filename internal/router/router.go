@@ -28,7 +28,7 @@ func MakeRouter(flag utils.Flags) *chi.Mux {
 		for {
 			select {
 			case <-ticker.C:
-				handlers.ActualiseOrders(flag, quit)
+				handlers.ActualiseOrders(flag)
 			case <-quit:
 				ticker.Stop()
 				return

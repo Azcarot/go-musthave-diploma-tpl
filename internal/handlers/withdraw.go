@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -17,9 +19,8 @@ func Withdraw(res http.ResponseWriter, req *http.Request) {
 	var userData storage.UserData
 	var orderData storage.OrderData
 	var ctxOrderKey, ctxUserKey storage.CtxKey
-	var ctx context.Context
-	ctx = context.Background()
-	dataLogin, ok := req.Context().Value(storage.UserLoginCtxKey).(string)
+	ctx := req.Context()
+	dataLogin, ok := ctx.Value(storage.UserLoginCtxKey).(string)
 	if !ok {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
@@ -51,24 +52,14 @@ func Withdraw(res http.ResponseWriter, req *http.Request) {
 	ctxUserKey = storage.UserLoginCtxKey
 	ctx = context.WithValue(ctx, ctxOrderKey, orderNumber)
 	ctx = context.WithValue(ctx, ctxUserKey, userData.Login)
-	var balanceData storage.BalanceResponce
 	mut := sync.Mutex{}
 	mut.Lock()
 	defer mut.Unlock()
-	balanceData, err = storage.PgxStorage.GetUserBalance(storage.ST, userData, ctx)
-	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	intAccBalanceData := int(balanceData.Accrual)
-	intWithdData := int(balanceData.Withdrawn)
-	if int(withdrawalData.Amount*100) > intAccBalanceData {
+	err = storage.PgxStorage.WithdrawFromUser(storage.ST, ctx, withdrawalData)
+	if errors.Is(err, fmt.Errorf("payment required")) {
 		res.WriteHeader(http.StatusPaymentRequired)
 		return
 	}
-	userData.AccrualPoints = intAccBalanceData
-	userData.Withdrawal = intWithdData
-	err = storage.PgxStorage.WitdrawFromUser(storage.ST, userData, withdrawalData, ctx)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
@@ -78,7 +69,7 @@ func Withdraw(res http.ResponseWriter, req *http.Request) {
 	orderData.Withdrawal = int(withdrawalData.Amount * 100)
 	orderData.Date = time.Now().Format(time.RFC3339)
 	orderData.User = userData.Login
-	err = storage.PgxStorage.CreateNewOrder(storage.ST, orderData, ctx)
+	err = storage.PgxStorage.CreateNewOrder(storage.ST, ctx, orderData)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return

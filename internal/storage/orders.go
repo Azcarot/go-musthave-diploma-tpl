@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (store SQLStore) CreateNewOrder(data OrderData, ctx context.Context) error {
+func (store SQLStore) CreateNewOrder(ctx context.Context, data OrderData) error {
 	data.State = "NEW"
 	if orderNumber, ok := ctx.Value(OrderNumberCtxKey).(uint64); ok {
 		tx, err := store.DB.Begin(ctx)
@@ -63,7 +63,7 @@ func (store SQLStore) GetCustomerOrders(login string) ([]OrderResponse, error) {
 
 }
 
-func (store SQLStore) CheckIfOrderExists(data OrderData, ctx context.Context) (bool, bool, error) {
+func (store SQLStore) CheckIfOrderExists(ctx context.Context, data OrderData) (bool, bool, error) {
 	var query string
 	if orderNumber, ok := ctx.Value(OrderNumberCtxKey).(uint64); ok {
 		query = fmt.Sprintf(`SELECT order_number, customer 

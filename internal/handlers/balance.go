@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/Azcarot/GopherMarketProject/internal/storage"
@@ -11,20 +9,16 @@ import (
 
 func GetBalance(res http.ResponseWriter, req *http.Request) {
 	var userData storage.UserData
-	var ctx context.Context
-	ctx = context.Background()
-	data, ok := req.Context().Value(storage.UserLoginCtxKey).(string)
+	ctx := req.Context()
+	data, ok := ctx.Value(storage.UserLoginCtxKey).(string)
 	if !ok {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	userData.Login = data
-	ctxUserKey := storage.UserLoginCtxKey
-	ctx = context.WithValue(ctx, ctxUserKey, userData.Login)
 	var balanceData storage.BalanceResponce
-	balanceData, err := storage.PgxStorage.GetUserBalance(storage.ST, userData, ctx)
+	balanceData, err := storage.PgxStorage.GetUserBalance(storage.ST, ctx, userData)
 	if err != nil {
-		fmt.Println(err)
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}

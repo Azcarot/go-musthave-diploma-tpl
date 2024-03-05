@@ -83,7 +83,7 @@ func CheckStatus(resp *http.Request) (*http.Response, error) {
 	return res, err
 }
 
-func ActualiseOrders(flag utils.Flags, quit chan struct{}) {
+func ActualiseOrders(flag utils.Flags) {
 	orderNumbers, err := storage.PgxStorage.GetUnfinishedOrders(storage.ST)
 	if err != nil {
 		time.Sleep(time.Duration(time.Duration(5).Seconds()))

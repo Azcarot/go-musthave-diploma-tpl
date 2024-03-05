@@ -62,14 +62,14 @@ type PgxStorage interface {
 	CreateNewUser(data UserData) error
 	CheckUserExists(data UserData) (bool, error)
 	CheckUserPassword(data UserData) (bool, error)
-	CreateNewOrder(data OrderData, ctx context.Context) error
+	CreateNewOrder(ctx context.Context, data OrderData) error
 	UpdateOrder(data OrderData) error
 	AddBalanceToUser(orderData OrderData) (bool, error)
-	WitdrawFromUser(userData UserData, withdraw WithdrawRequest, ctx context.Context) error
-	GetUserBalance(data UserData, ctx context.Context) (BalanceResponce, error)
+	WithdrawFromUser(ctx context.Context, withdraw WithdrawRequest) error
+	GetUserBalance(ctx context.Context, data UserData) (BalanceResponce, error)
 	GetWithdrawals(userData UserData) ([]WithdrawResponse, error)
 	GetCustomerOrders(login string) ([]OrderResponse, error)
-	CheckIfOrderExists(data OrderData, ctx context.Context) (bool, bool, error)
+	CheckIfOrderExists(ctx context.Context, data OrderData) (bool, bool, error)
 	GetUnfinishedOrders() ([]uint64, error)
 }
 

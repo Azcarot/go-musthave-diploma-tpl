@@ -27,6 +27,7 @@ func main() {
 		}
 		server.ListenAndServe()
 
+	} else {
+		fmt.Fprintf(os.Stderr, "Missing required flag -d : DataBase address\n")
 	}
-	fmt.Fprintf(os.Stderr, "Missing required flag -d : DataBase address\n")
 }
