@@ -17,14 +17,12 @@ import (
 )
 
 func GetOrders(res http.ResponseWriter, req *http.Request) {
-	var userData storage.UserData
 	ctx := req.Context()
-	data, ok := req.Context().Value(storage.UserLoginCtxKey).(string)
+	_, ok := req.Context().Value(storage.UserLoginCtxKey).(string)
 	if !ok {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	userData.Login = data
 	orders, err := storage.PgxStorage.GetCustomerOrders(storage.ST, ctx)
 	if errors.Is(err, pgx.ErrNoRows) {
 		res.WriteHeader(http.StatusNoContent)

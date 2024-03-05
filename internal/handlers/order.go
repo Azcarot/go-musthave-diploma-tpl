@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -21,9 +20,7 @@ type OrderRequest struct {
 
 func Order(res http.ResponseWriter, req *http.Request) {
 	var userData storage.UserData
-	var ctx context.Context
-	var ctxOrderKey storage.CtxKey
-	ctx = context.Background()
+	ctx := req.Context()
 	dataLogin, ok := req.Context().Value(storage.UserLoginCtxKey).(string)
 	if !ok {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -48,8 +45,6 @@ func Order(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	var order storage.OrderData
-	ctxOrderKey = storage.OrderNumberCtxKey
-	ctx = context.WithValue(ctx, ctxOrderKey, orderNumber)
 	order.OrderNumber = orderNumber
 	order.User = userData.Login
 	mut := sync.Mutex{}

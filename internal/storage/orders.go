@@ -10,29 +10,28 @@ import (
 
 func (store SQLStore) CreateNewOrder(ctx context.Context, data OrderData) error {
 	data.State = "NEW"
-	if orderNumber, ok := ctx.Value(OrderNumberCtxKey).(uint64); ok {
-		tx, err := store.DB.Begin(ctx)
-		if err != nil {
-			return err
-		}
-		_, err = store.DB.Exec(ctx, `INSERT INTO orders 
-	(order_number, accrual_points, state, customer, withdrawal, created) 
-	values ($1, $2, $3, $4, $5, $6);`,
-			orderNumber, data.Accrual, data.State, data.User, data.Withdrawal, data.Date)
-		if err != nil {
-			tx.Rollback(ctx)
-			return err
-		}
-		err = tx.Commit(ctx)
-		if err != nil {
-			tx.Rollback(ctx)
-			return err
-		}
-		return nil
-	} else {
+	dataLogin, ok := ctx.Value(UserLoginCtxKey).(string)
+	if !ok {
 		return ErrNoLogin
 	}
-
+	tx, err := store.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = store.DB.Exec(ctx, `INSERT INTO orders 
+	(order_number, accrual_points, state, customer, withdrawal, created) 
+	values ($1, $2, $3, $4, $5, $6);`,
+		data.OrderNumber, data.Accrual, data.State, dataLogin, data.Withdrawal, data.Date)
+	if err != nil {
+		tx.Rollback(ctx)
+		return err
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		tx.Rollback(ctx)
+		return err
+	}
+	return nil
 }
 
 func (store SQLStore) GetCustomerOrders(ctx context.Context) ([]OrderResponse, error) {
